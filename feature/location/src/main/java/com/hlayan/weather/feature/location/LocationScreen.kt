@@ -13,14 +13,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.outlined.RemoveCircleOutline
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,7 +38,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -48,7 +46,6 @@ import com.dokar.sonner.Toaster
 import com.dokar.sonner.rememberToasterState
 import com.hlayan.weather.core.model.SearchedLocation
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocationScreen(
     onBackClick: () -> Unit,
@@ -60,63 +57,20 @@ fun LocationScreen(
     val input by viewModel.input.collectAsStateWithLifecycle()
     val savedLocations by viewModel.savedLocations.collectAsStateWithLifecycle()
     val searchedLocations by viewModel.searchedLocations.collectAsStateWithLifecycle()
-    val loading by viewModel.loading.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
 
     val isInputEmpty by remember { derivedStateOf { input.isEmpty() } }
 
     Scaffold(
         topBar = {
             Column {
-                TopAppBar(
-                    title = {
-                        if (isInputEmpty) {
-                            Text(
-                                text = "Search",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontSize = 18.sp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-                            )
-                        }
-
-                        BasicTextField(
-                            value = input,
-                            onValueChange = viewModel::onInputChange,
-                            textStyle = MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = 18.sp,
-                                color = MaterialTheme.colorScheme.onSurface
-                            ),
-                            singleLine = true,
-                            keyboardActions = KeyboardActions(
-                                onSearch = {
-                                    viewModel.searchLocations()
-                                }
-                            ),
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                            cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    },
-                    navigationIcon = {
-                        viewModel.previousLocation?.let {
-                            IconButton(onClick = onBackClick) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Navigate up"
-                                )
-                            }
-                        }
-                    },
-                    actions = {
-                        if (!isInputEmpty) {
-                            IconButton(
-                                onClick = {
-                                    viewModel.onInputChange("")
-                                }
-                            ) {
-                                Icon(Icons.Filled.Close, contentDescription = "Clean Input")
-                            }
-                        }
-                    },
+                SearchBar(
+                    value = input,
+                    isInputEmpty = isInputEmpty,
+                    enableNavigationIcon = viewModel.previousLocation != null,
+                    onValueChange = viewModel::onInputChange,
+                    onNavigationIconClick = onBackClick,
+                    onClearClick = viewModel::clearInput
                 )
                 HorizontalDivider()
             }
@@ -144,10 +98,12 @@ fun LocationScreen(
                 }
             } else {
                 if (searchedLocations.isEmpty()) {
-                    Text(
-                        text = "No results yet",
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    if (!isRefreshing) {
+                        Text(
+                            text = "No results yet",
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
                 } else {
                     SearchedLocationList(
                         items = searchedLocations,
@@ -159,12 +115,65 @@ fun LocationScreen(
                     )
                 }
             }
-            if (loading) CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            if (isRefreshing) CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         }
     }
 
     Toaster(state = toasterState)
 
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SearchBar(
+    value: String,
+    isInputEmpty: Boolean,
+    enableNavigationIcon: Boolean,
+    onValueChange: (String) -> Unit,
+    onNavigationIconClick: () -> Unit,
+    onClearClick: () -> Unit
+) {
+    TopAppBar(
+        title = {
+            if (isInputEmpty) {
+                Text(
+                    text = "Search",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontSize = 18.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                )
+            }
+
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                    fontSize = 18.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                ),
+                singleLine = true,
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        },
+        navigationIcon = {
+            if (enableNavigationIcon) {
+                IconButton(onClick = onNavigationIconClick) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Navigate up"
+                    )
+                }
+            }
+        },
+        actions = {
+            if (!isInputEmpty) {
+                IconButton(onClick = onClearClick) {
+                    Icon(Icons.Filled.Close, contentDescription = "Clean Input")
+                }
+            }
+        },
+    )
 }
 
 @Composable
@@ -229,7 +238,7 @@ private fun SavedLocationItem(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(8.dp)
         ) {
-            FilledIconButton(onClick = {}) {
+            FilledIconButton(onClick = onClick) {
                 Icon(imageVector = Icons.Default.LocationOn, contentDescription = null)
             }
 
@@ -241,9 +250,9 @@ private fun SavedLocationItem(
                     .padding(horizontal = 8.dp)
             )
 
-            FilledIconButton(onClick = onRemove) {
+            IconButton(onClick = onRemove) {
                 Icon(
-                    imageVector = Icons.Default.Close,
+                    imageVector = Icons.Outlined.RemoveCircleOutline,
                     contentDescription = "Remove"
                 )
             }
@@ -266,7 +275,7 @@ private fun SearchedLocationItem(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(8.dp)
         ) {
-            FilledIconButton(onClick = {}) {
+            FilledIconButton(onClick = onClick) {
                 Icon(imageVector = Icons.Default.LocationOn, contentDescription = null)
             }
             Spacer(modifier = Modifier.size(8.dp))

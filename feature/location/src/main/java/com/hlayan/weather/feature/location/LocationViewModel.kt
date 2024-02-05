@@ -7,6 +7,8 @@ import com.hlayan.weather.core.data.repository.WeatherRepository
 import com.hlayan.weather.core.model.SearchedLocation
 import com.hlayan.weather.feature.location.navigation.LocationScreenArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,6 +16,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class LocationViewModel @Inject constructor(
@@ -25,8 +28,10 @@ class LocationViewModel @Inject constructor(
 
     val previousLocation = args.previousLocation
 
-    private val _isLoading = MutableStateFlow(false)
-    val loading = _isLoading.asStateFlow()
+    private var searchLocationJob: Job? = null
+
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing = _isRefreshing.asStateFlow()
 
     val savedLocations = repository.savedLocations.stateIn(
         scope = viewModelScope,
@@ -41,9 +46,16 @@ class LocationViewModel @Inject constructor(
     val input = _input.asStateFlow()
 
     fun onInputChange(value: String) {
-        _input.value = value
-        if (value.isBlank()) _searchedLocations.value = emptyList()
+        if (value.isEmpty()) clearInput() else {
+            _input.value = value
+            searchLocations()
+        }
+    }
 
+    fun clearInput() {
+        _input.value = ""
+        searchLocationJob?.cancel()
+        _searchedLocations.value = emptyList()
     }
 
     fun onRemoveLocation(id: Int) {
@@ -58,16 +70,18 @@ class LocationViewModel @Inject constructor(
         }
     }
 
-    fun searchLocations() {
-        viewModelScope.launch {
+    private fun searchLocations() {
+        searchLocationJob?.cancel()
+        searchLocationJob = viewModelScope.launch {
+            delay(500.milliseconds)
             try {
-                _isLoading.value = true
+                _isRefreshing.value = true
                 val results = repository.searchLocations(_input.value)
                 _searchedLocations.update { results }
             } catch (e: Exception) {
                 _searchedLocations.value = emptyList()
             } finally {
-                _isLoading.value = false
+                _isRefreshing.value = false
             }
         }
     }
