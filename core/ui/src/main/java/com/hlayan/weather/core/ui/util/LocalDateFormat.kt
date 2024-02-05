@@ -14,6 +14,6 @@ fun String.asLocalDate(): LocalDate {
     return LocalDate.parse(this)
 }
 
-fun String.asLocalDateTime(pattern: String = "yyyy-MM-dd HH:mm"): LocalDateTime {
+fun String.asLocalDateTime(pattern: String = "yyyy-MM-dd H:mm"): LocalDateTime {
     return LocalDateTime.parse(this, DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH))
 }

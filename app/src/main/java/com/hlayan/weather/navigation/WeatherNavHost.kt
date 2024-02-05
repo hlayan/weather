@@ -24,7 +24,7 @@ fun WeatherNavHost(
         modifier = modifier,
     ) {
         locationScreen(
-            onBackClick = navController::popBackStack,
+            onBackClick = { navController.popBackStack(HOME_ROUTE, false) },
             onLocationItemClick = { location, previousLocation ->
                 if (location == previousLocation) navController.popBackStack()
                 else {

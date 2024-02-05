@@ -9,12 +9,8 @@ import com.hlayan.weather.core.model.UserPreferences
 import com.hlayan.weather.core.ui.common.asFlowEvent
 import com.hlayan.weather.core.ui.common.mutableFlowEvent
 import com.hlayan.weather.core.ui.common.sendEvent
-import com.hlayan.weather.core.ui.util.asLocalDate
-import com.hlayan.weather.core.ui.util.asLocalDateTime
-import com.hlayan.weather.core.ui.util.format
 import com.hlayan.weather.feature.home.navigation.HomeScreenArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +19,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.math.roundToInt
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -36,34 +31,8 @@ class HomeViewModel @Inject constructor(
 
     val locationName = args.locationName
 
-    val uiState = repository.getWeather(args.locationName)
-        .map { weather ->
-            if (weather == null) HomeUiState()
-            else HomeUiState(
-                location = weather.location.run { "$name, $country" },
-                currentTempC = "${weather.current.tempC.roundToInt()}°",
-                feelLikeTempC = "${weather.current.feelslikeC.roundToInt()}°",
-                weatherCondition = weather.current.condition.text,
-                weatherDateTime = weather.location.localtime,
-                uvIndex = "${weather.current.uv}",
-                humidity = "${weather.current.humidity}%",
-                wind = "${weather.current.windKph} km/h",
-                pressure = "${weather.current.pressureMb} mb",
-                visibility = "${weather.current.visKm} km",
-                forecastDays = weather.forecast.forecastDay.map {
-                    ForecastDayUiState(
-                        tempC = "${it.day.maxtempC.roundToInt()}°/${it.day.mintempC.roundToInt()}°",
-                        date = it.date.asLocalDate().format("dd MMM")
-                    )
-                }.toImmutableList(),
-                forecastHours = weather.forecast.forecastDay[0].hour.map {
-                    ForecastHourUiState(
-                        tempC = "${it.tempC.roundToInt()}°",
-                        time = it.time.asLocalDateTime().format("h a")
-                    )
-                }.toImmutableList()
-            )
-        }
+    val uiState: StateFlow<HomeUiState> = repository.getWeather(args.locationName)
+        .map { it?.asHomeUiState() ?: HomeUiState() }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Lazily,
@@ -76,8 +45,8 @@ class HomeViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5_000),
     )
 
-    private val _isLoading = MutableStateFlow(false)
-    val loading = _isLoading.asStateFlow()
+    private val _refreshing = MutableStateFlow(false)
+    val refreshing = _refreshing.asStateFlow()
 
     private val _messageEvent = mutableFlowEvent<String>()
     val messageEvent = _messageEvent.asFlowEvent()
@@ -95,12 +64,12 @@ class HomeViewModel @Inject constructor(
     fun refreshWeather() {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                _refreshing.value = true
                 repository.refreshWeather(args.locationName, 6)
             } catch (e: Exception) {
                 _messageEvent.sendEvent("Cannot refresh!")
             } finally {
-                _isLoading.value = false
+                _refreshing.value = false
             }
         }
     }

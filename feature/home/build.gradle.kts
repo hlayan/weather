@@ -85,6 +85,7 @@ dependencies {
     // Other
     implementation(libs.coil.compose)
     implementation(libs.sonner)
+    implementation(libs.onebone.toolbarCompose)
 
     coreLibraryDesugaring(libs.desugarJdkLibs)
 }
