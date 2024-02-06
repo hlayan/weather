@@ -1,5 +1,7 @@
 package com.hlayan.weather.feature.home
 
+import com.hlayan.weather.core.model.ForecastDay
+import com.hlayan.weather.core.model.Hour
 import com.hlayan.weather.core.model.Weather
 import com.hlayan.weather.core.ui.util.asLocalDate
 import com.hlayan.weather.core.ui.util.asLocalDateTime
@@ -24,6 +26,19 @@ data class HomeUiState(
     val forecastHours: ImmutableList<ForecastHourUiState> = emptyList<ForecastHourUiState>().toImmutableList(),
 )
 
+data class ForecastDayUiState(
+    val tempC: String,
+    val date: String,
+    val icon: String,
+    val condition: String
+)
+
+data class ForecastHourUiState(
+    val tempC: String,
+    val time: String,
+    val icon: String
+)
+
 internal fun Weather.asHomeUiState() = HomeUiState(
     location = location.name,
     currentTempC = "${current.tempC.roundToInt()}°",
@@ -37,31 +52,22 @@ internal fun Weather.asHomeUiState() = HomeUiState(
     pressure = "${current.pressureMb} mb",
     visibility = "${current.visKm} km",
     forecastDays = forecast.forecastDay.subList(1, forecast.forecastDay.size).map {
-        ForecastDayUiState(
-            tempC = "${it.day.maxtempC.roundToInt()}°/${it.day.mintempC.roundToInt()}°",
-            date = it.date.asLocalDate().format("E, d MMM"),
-            icon = "https:" + it.day.condition.icon,
-            condition = it.day.condition.text
-        )
+        it.asForecastDayUiState()
     }.toImmutableList(),
     forecastHours = forecast.forecastDay[0].hour.map {
-        ForecastHourUiState(
-            tempC = "${it.tempC.roundToInt()}°",
-            time = it.time.asLocalDateTime().format("h a"),
-            icon = "https:" + it.condition.icon
-        )
+        it.asForecastHourUiState()
     }.toImmutableList()
 )
 
-data class ForecastDayUiState(
-    val tempC: String,
-    val date: String,
-    val icon: String,
-    val condition: String
+fun ForecastDay.asForecastDayUiState() = ForecastDayUiState(
+    tempC = "${day.maxtempC.roundToInt()}°/${day.mintempC.roundToInt()}°",
+    date = date.asLocalDate().format("E, d MMM"),
+    icon = "https:" + day.condition.icon,
+    condition = day.condition.text
 )
 
-data class ForecastHourUiState(
-    val tempC: String,
-    val time: String,
-    val icon: String
+fun Hour.asForecastHourUiState() = ForecastHourUiState(
+    tempC = "${tempC.roundToInt()}°",
+    time = time.asLocalDateTime().format("h a"),
+    icon = "https:" + condition.icon
 )

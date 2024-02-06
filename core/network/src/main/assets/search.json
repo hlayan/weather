@@ -1,0 +1,47 @@
+[
+  {
+    "id": 2285382,
+    "name": "Singapore",
+    "region": "",
+    "country": "Singapore",
+    "lat": 1.29,
+    "lon": 103.86,
+    "url": "singapore-singapore"
+  },
+  {
+    "id": 3024254,
+    "name": "Singaraja",
+    "region": "Bali",
+    "country": "Indonesia",
+    "lat": -8.11,
+    "lon": 115.09,
+    "url": "singaraja-bali-indonesia"
+  },
+  {
+    "id": 3333141,
+    "name": "Singarauli",
+    "region": "Madhya Pradesh",
+    "country": "India",
+    "lat": 24.2,
+    "lon": 82.67,
+    "url": "singarauli-madhya-pradesh-india"
+  },
+  {
+    "id": 2488971,
+    "name": "Singida",
+    "region": "Singida",
+    "country": "Tanzania",
+    "lat": -4.82,
+    "lon": 34.75,
+    "url": "singida-singida-tanzania"
+  },
+  {
+    "id": 2960692,
+    "name": "Singosari",
+    "region": "East Java",
+    "country": "Indonesia",
+    "lat": -7.89,
+    "lon": 112.67,
+    "url": "singosari-east-java-indonesia"
+  }
+]

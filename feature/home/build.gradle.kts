@@ -31,6 +31,13 @@ android {
         jvmTarget = "17"
     }
 
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            isReturnDefaultValues = true
+        }
+    }
+
     buildFeatures {
         compose = true
     }
@@ -79,6 +86,7 @@ dependencies {
     kapt(libs.androidx.hilt.compiler)
 
     testImplementation(libs.junit.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)
 

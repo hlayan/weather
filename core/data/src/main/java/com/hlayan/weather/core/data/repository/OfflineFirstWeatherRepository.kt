@@ -6,6 +6,7 @@ import com.hlayan.weather.core.data.model.asWeather
 import com.hlayan.weather.core.database.dao.SavedLocationDao
 import com.hlayan.weather.core.database.dao.WeatherDao
 import com.hlayan.weather.core.model.SearchedLocation
+import com.hlayan.weather.core.model.Weather
 import com.hlayan.weather.core.network.WeatherDataSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -20,7 +21,7 @@ class OfflineFirstWeatherRepository @Inject constructor(
     override val savedLocations: Flow<List<SearchedLocation>> =
         savedLocationDao.getLocations().map { items -> items.map { it.asSearchedLocation() } }
 
-    override fun getWeather(locationName: String): Flow<com.hlayan.weather.core.model.Weather?> {
+    override fun getWeather(locationName: String): Flow<Weather?> {
         return weatherDao.getWeather(locationName).map { it?.asWeather() }
     }
 

@@ -167,28 +167,27 @@ private fun CollapsingToolbarScope.HomeCollapsingTopBar(
         Box(
             modifier = Modifier
                 .parallax()
-                .height(300.dp)
+                .height(320.dp)
                 .fillMaxWidth()
                 .graphicsLayer {
                     alpha = toolbarScaffoldState.toolbarState.progress
                 }
                 .padding(top = paddings.calculateTopPadding()),
         ) {
-            Row(
-                modifier = Modifier.align(Alignment.Center),
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
                     text = uiState.currentTempC,
                     style = MaterialTheme.typography.headlineLarge,
-                    fontSize = 48.sp,
-                    modifier = Modifier.padding(end = 16.dp)
+                    fontSize = 64.sp,
                 )
 
-                AsyncImage(
-                    model = uiState.weatherIcon,
-                    contentDescription = "Weather Icon",
-                    modifier = Modifier.size(56.dp)
+                Text(
+                    text = "Feels like " + uiState.feelLikeTempC,
+                    style = MaterialTheme.typography.bodyMedium,
                 )
             }
         }
@@ -232,7 +231,7 @@ private fun CollapsingToolbarScope.HomeCollapsingTopBar(
         }
     }
 
-    Box(
+    Row(
         modifier = Modifier
             .height(with(density) { itemSize.value.height.toDp() })
             .road(
@@ -242,14 +241,20 @@ private fun CollapsingToolbarScope.HomeCollapsingTopBar(
             .padding(
                 start = (progress * 16).dp,
                 top = paddings.calculateTopPadding()
-            )
+            ),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = uiState.location,
             style = MaterialTheme.typography.titleMedium,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.align(Alignment.Center)
+        )
+
+        AsyncImage(
+            model = uiState.weatherIcon,
+            contentDescription = "Weather Icon",
+            modifier = Modifier.size(48.dp)
         )
     }
 
