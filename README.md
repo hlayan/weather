@@ -7,6 +7,16 @@ Weather is a forecasting Android app built entirely with Kotlin and Jetpack Comp
 - Java 17+
 - The **latest stable** Android Studio (for easy install use [JetBrains Toolbox](https://www.jetbrains.com/toolbox-app/))
 
+## Screenshots
+
+<table align="center">
+   <tr>
+      <td><img src="https://github.com/hlayan/weather/blob/main/screenshots/home_expended_light.PNG"></td>
+      <td><img src="https://github.com/hlayan/weather/blob/main/screenshots/home_collapsed_dark.PNG"></td>
+      <td><img src="https://github.com/hlayan/weather/blob/main/screenshots/search_locations.PNG"></td>
+   </tr>
+</table>
+
 ## Tech Stack
 
 ### Core
